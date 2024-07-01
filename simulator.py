@@ -65,7 +65,7 @@ class Photon:
             reflectance = self.reflectance_calculator.get_reflectance(self.wavelength, incident_angle)
             # Determine if the photon is still active based on reflectance
             if np.random.random() > reflectance:
-                print(f'angle: {incident_angle/ np.pi} * pi and reflectance:{reflectance}')
+                #print(f'angle: {incident_angle/ np.pi} * pi and reflectance:{reflectance}')
                 self.status = 'hit'
         else:
             self.status = 'absorbed'
@@ -112,7 +112,7 @@ class Geometry:
 
 
 class BookGeometry(Geometry):
-    def __init__(self, angle_degrees, dcr_file=None):
+    def __init__(self, angle_degrees, theta=None, dcr_file=None):
         """
         Initialize the BookGeometry with the angle between the two squares
         and a csv file of DCR.
@@ -126,6 +126,7 @@ class BookGeometry(Geometry):
         self.squares = self._compute_square_planes()
         self.dcr = np.full(32, 5600.0)  # default DCR value
         self.crosstalk = np.full(32, 0.15)
+        self.theta = theta
         if dcr_file and os.path.exists(dcr_file):
             self._read_dcr_from_csv(dcr_file)
         self._generate_cumulative_dcr()
@@ -207,7 +208,11 @@ class BookGeometry(Geometry):
         ## Randomly sample theta within the given angle
         #theta = np.random.uniform(0, angle)
         # Randomly sample theta within the given angle using a distribution that favors smaller angles
-        theta = np.arccos(np.random.uniform(np.cos(angle), 1))
+        if self.theta == None:
+            theta = np.arccos(np.random.uniform(np.cos(angle), 1))
+        else:
+            theta = np.arccos(np.cos(self.theta / 180 * np.pi))
+        #print(theta / np.pi * 180)
         #theta = np.arccos(np.cos(angle))
         # Uniformly sample phi between 0 and 2*pi
         phi = np.random.uniform(0, 2 * np.pi)

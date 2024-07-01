@@ -10,15 +10,19 @@ import ROOT
 # Example usage
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Photon Simulation Parameters')
-    parser.add_argument('--N', type=int, default=100, help='Number of tests')
-    parser.add_argument('--angle', type=float, default=30, help='Number of tests')
+    parser.add_argument('--N', type=int, default=10000, help='Number of tests')
+    parser.add_argument('--angle', type=float, default=30, help='angle of two sipms')
+    parser.add_argument('--theta', type=float, default=None, help='angular emission')
     parser.add_argument('--ext', type=int, default=True, help='turn on external crosstalk')
     args = parser.parse_args()
-    return args.N, args.angle, args.ext
+    return args.N, args.angle, args.theta, args.ext
 
-N, angle, ext= parse_arguments()
+N, angle, theta, ext= parse_arguments()
 # Parse command line arguments
-geometry = BookGeometry(angle)
+if theta == None:
+    geometry = BookGeometry(angle)
+else:
+    geometry = BookGeometry(angle, theta)
 def generate_and_propagate_photons(x,y,z,lambda_=5, pde=0.1, init_fire=True):
     for _ in range(np.random.poisson(lambda_)):
         dx, dy, dz = geometry.generate_isotropic_direction(geometry.get_normal_at_position(np.array([x,y,z])))
@@ -28,7 +32,7 @@ def generate_and_propagate_photons(x,y,z,lambda_=5, pde=0.1, init_fire=True):
             fired_channels.append((photon.surface, photon.channel))
             init_fire = False
         while (photon.status == "active"):
-            visualize_geometry(photon, geometry)
+            #visualize_geometry(photon, geometry)
             photon.check_and_update_status(geometry)
             if photon.status == 'hit':
                 if np.random.random() < pde:
